@@ -1,0 +1,45 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  build:
+    name: Build and test
+    runs-on: ubuntu-24.04
+    steps:
+        - name: Checkout code
+          uses: actions/checkout@v4
+        - name: Set up Rust toolchain
+          uses: dtolnay/rust-toolchain@master
+          with:
+            toolchain: stable
+            components: rustfmt, clippy
+        - name: Set up PHP
+          uses: shivammathur/setup-php@v2
+          with:
+              php-version: '8.1'
+        - name: Get composer cache directory
+          id: composer-cache
+          run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+
+        - name: Cache dependencies
+          uses: actions/cache@v4
+          with:
+            path: ${{ steps.composer-cache.outputs.dir }}
+            key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+            restore-keys: ${{ runner.os }}-composer-
+
+        - name: Install dependencies
+          run: composer install --prefer-dist
+        - name: rustfmt
+          run: cargo fmt --check
+        - name: clippy
+          run: cargo clippy
+        - name: Build extension
+          run: cargo build --locked
+        - name: Run tests
+          run: composer test
