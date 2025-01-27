@@ -13,7 +13,7 @@ use ext_php_rs::prelude::*;
 use ext_php_rs::types::ZendClassObject;
 use ext_php_rs::{exception::PhpException, zend::ce};
 use oxc::allocator::Allocator;
-use oxc::codegen::{Codegen, CodegenReturn};
+use oxc::codegen::{Codegen, CodegenOptions, CodegenReturn, LegalComment};
 use oxc::diagnostics::Error;
 use oxc::minifier::{CompressOptions, Minifier, MinifierOptions, MinifierReturn};
 use oxc::parser::{Parser, ParserReturn};
@@ -87,7 +87,17 @@ impl JavascriptMinifier {
         let MinifierReturn { mangler } =
             Minifier::new(minifier_options).build(&allocator, &mut program);
 
-        let CodegenReturn { code, .. } = Codegen::new().with_mangler(mangler).build(&program);
+        let CodegenReturn { code, .. } = Codegen::new()
+            .with_mangler(mangler)
+            .with_options(CodegenOptions {
+                single_quote: false,
+                minify: true,
+                comments: false,
+                annotation_comments: false,
+                legal_comments: LegalComment::default(),
+                source_map_path: None,
+            })
+            .build(&program);
 
         Ok(code)
     }

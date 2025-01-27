@@ -8,4 +8,4 @@ $minifier = new JavascriptMinifier();
 print $minifier->minify("var a = 1;\nvar b = 2; // comment");
 ?>
 --EXPECT--
-var a = 1, b = 2;
+var a=1,b=2;
